@@ -51,11 +51,18 @@
                 file-name)))
   (read-from-disk [this]
     (let [file-path @file-agent]
-      (.reset this (if (.canRead (io/file file-path))
-                     (try
-                       (read-string (slurp file-path))
-                       (catch RuntimeException _ nil))
-                    nil)))))
+      (.reset this
+              (let [f (io/file file-path)]
+                (when (.canRead f)
+                  (let [s (slurp f)]
+                    (when-not (empty? s)
+                      (try (read-string s)
+                           (catch RuntimeException e
+                             (throw
+                              (ex-info "Could not read durable-atom data"
+                                       {:file-path @file-agent
+                                        :content (subs s 0 (min 100 (.length s)))}
+                                       e))))))))))))
 
 (defmethod print-method DurableAtom [x, ^Writer w]
   ((get-method print-method IRecord) x w))

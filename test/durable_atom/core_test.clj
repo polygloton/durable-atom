@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.java.io :as io]
             [durable-atom.core :refer [durable-atom]])
-  (:import java.io.File))
+  (:import clojure.lang.ExceptionInfo
+           java.io.File))
 
 (defonce test-file (atom nil))
 
@@ -73,3 +74,8 @@
     (await (:file-agent a))
     (is (= "10\n" (read-test-file)))
     (is (= 10 @a))))
+
+(deftest durable-atom-corrupt-file-test
+  (write-test-file "^%$#%^")
+  (is (thrown? ExceptionInfo (durable-atom (get-file-path))))
+  (write-test-file ""))
