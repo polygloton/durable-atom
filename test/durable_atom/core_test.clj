@@ -59,6 +59,7 @@
     (await (:file-agent a)))
   (let [b (durable-atom (get-file-path))]
     (is (= "{:foo \"bar\"}\n" (read-test-file)))
+    (is (= {:foo "bar"} @b))
     (reset! b {:foo "baz"})
     (await (:file-agent b))
     (is (= "{:foo \"baz\"}\n" (read-test-file)))
