@@ -1,4 +1,4 @@
-(defproject durable-atom "0.0.2"
+(defproject durable-atom "0.0.3"
   :description "Simple file-backed, durable atom"
   :url "https://github.com/polygloton/durable-atom"
   :license {:name "Eclipse Public License"
