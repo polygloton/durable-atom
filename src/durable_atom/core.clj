@@ -9,33 +9,39 @@
   (write-to-disk [this])
   (read-from-disk [this]))
 
-(defrecord DurableAtom [delegated-atom file-agent]
+(defrecord DurableAtom [delegated-atom file-agent lock]
   IAtom
   (swap [this f]
-    (let [result (.swap delegated-atom f)]
-      (.write-to-disk this)
-      result))
+    (locking lock
+      (let [result (.swap delegated-atom f)]
+        (.write-to-disk this)
+        result)))
   (swap [this f arg]
-    (let [result (.swap delegated-atom f arg)]
-      (.write-to-disk this)
-      result))
+    (locking lock
+      (let [result (.swap delegated-atom f arg)]
+        (.write-to-disk this)
+        result)))
   (swap [this f arg1 arg2]
-    (let [result (.swap delegated-atom f arg1 arg2)]
-      (.write-to-disk this)
-      result))
+    (locking lock
+      (let [result (.swap delegated-atom f arg1 arg2)]
+        (.write-to-disk this)
+        result)))
   (swap [this f x y args]
-    (let [result (.swap delegated-atom f x y args)]
-      (.write-to-disk this)
-      result))
+    (locking lock
+      (let [result (.swap delegated-atom f x y args)]
+        (.write-to-disk this)
+        result)))
   (compareAndSet [this oldv newv]
-    (let [result (.compareAndSet delegated-atom oldv newv)]
-      (when result
-        (.write-to-disk this))
-      result))
+    (locking lock
+      (let [result (.compareAndSet delegated-atom oldv newv)]
+        (when result
+          (.write-to-disk this))
+        result)))
   (reset [this newval]
-    (let [result (.reset delegated-atom newval)]
-      (.write-to-disk this)
-      result))
+    (locking lock
+      (let [result (.reset delegated-atom newval)]
+        (.write-to-disk this)
+        result)))
 
   IDeref
   (deref [_]
@@ -71,5 +77,5 @@
   [file-name]
   (assert (.canWrite (io/file file-name))
           (str "Can not write to " file-name))
-  (doto (->DurableAtom (atom nil) (agent file-name))
+  (doto (->DurableAtom (atom nil) (agent file-name) (Object.))
     (.read-from-disk)))
