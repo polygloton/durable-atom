@@ -1,0 +1,2 @@
+language: clojure
+script: lein with-profile 1.8 test
